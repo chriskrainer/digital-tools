@@ -1,0 +1,26 @@
+node_modules
+dist
+.DS_Store
+server/public
+vite.config.ts.*
+*.tar.gz.cache/
+.cache/
+.agents/
+.env
+.env.*
+!.env.local.example
+
+# Chat-attached screenshots and reference media. These are workspace artifacts
+# from agent sessions, not application source. Kept on disk so existing
+# @assets/... imports continue to resolve, but excluded from version control
+# to keep the repo small enough to push to GitHub.
+attached_assets/
+
+# Large binary artifacts that exceed GitHub's 100 MB per-file limit.
+# Keep on disk if needed locally, but never commit.
+DigitalToolCenter-LocalDeployment.zip
+*.mp4
+
+# Database snapshots taken before risky operations (e.g. Helium migration).
+# Contain analytics data and shareable-link tokens — never commit.
+.local/db-backups/
