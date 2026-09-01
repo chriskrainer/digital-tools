@@ -18,6 +18,11 @@ Until resource isolation is explicitly verified:
 - Preserve `/r/:id` and `/c/:shortCode` while retained code is separated.
 - Use `npm run check:retained` for non-mutating baseline verification.
 
+Database isolation was verified on September 1, 2026. The Digital Tools app uses this
+remix's managed Replit PostgreSQL database, whose retained QR and UTM records were
+fingerprint-matched to the inherited source before the local source-database override
+was removed. Do not reconnect the inherited database or delete its tables or records.
+
 ## Overview
 Digital Tools contains only the QR Code Manager and UTM Builder retained from the former unified Digital Tool Center.
 
@@ -37,7 +42,7 @@ The platform uses React 18, TypeScript, Vite, and Wouter for routing. UI is buil
 The backend is Node.js with Express.js (TypeScript), providing REST APIs for QR codes, QR scans, UTM campaigns, and UTM visits. Security is handled with Helmet middleware. Zod validates API payloads, `qrcode` and `canvas` generate QR images, and short-code redirects record retained-tool analytics.
 
 ### System Design Choices
-Data is stored in PostgreSQL (Neon serverless) and managed with Drizzle ORM. The active schema contains QR codes, QR scans, UTM campaigns, and UTM visits. The app can be protected by the optional `DTC_ACCESS_PASSWORD`.
+Data is stored in the remix's managed Replit PostgreSQL database and managed with Drizzle ORM. The active schema contains QR codes, QR scans, UTM campaigns, and UTM visits. When `DTC_ACCESS_PASSWORD` is configured, server-signed HTTP-only sessions protect all QR and UTM management APIs while public redirect routes remain accessible.
 
 ## External Dependencies
 

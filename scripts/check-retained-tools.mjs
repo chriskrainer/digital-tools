@@ -52,6 +52,11 @@ async function run() {
     "boolean",
     "/api/auth/check must return passwordRequired as a boolean",
   );
+  assert.equal(
+    typeof authBody.authenticated,
+    "boolean",
+    "/api/auth/check must return authenticated as a boolean",
+  );
 
   const qrCodes = await expectJsonArray("/api/qrcodes");
   if (qrCodes.length > 0) {

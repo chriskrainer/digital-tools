@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense } from "react";
 import { Route, Switch } from "wouter";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
@@ -66,10 +66,10 @@ function AppContent() {
 }
 
 function AuthWrapper({ children }: { children: React.ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(
-    () => sessionStorage.getItem("dtc-authenticated") === "true",
-  );
-  const { data: authCheck, isLoading } = useQuery<{ passwordRequired: boolean }>({
+  const { data: authCheck, isLoading, refetch } = useQuery<{
+    passwordRequired: boolean;
+    authenticated: boolean;
+  }>({
     queryKey: ["/api/auth/check"],
   });
 
@@ -81,8 +81,8 @@ function AuthWrapper({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (authCheck?.passwordRequired && !isAuthenticated) {
-    return <PasswordScreen onSuccess={() => setIsAuthenticated(true)} />;
+  if (authCheck?.passwordRequired && !authCheck.authenticated) {
+    return <PasswordScreen onSuccess={() => void refetch()} />;
   }
 
   return <>{children}</>;

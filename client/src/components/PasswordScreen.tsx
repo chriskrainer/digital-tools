@@ -75,7 +75,6 @@ export function PasswordScreen({ onSuccess }: PasswordScreenProps) {
       const data = await response.json();
 
       if (data.success) {
-        sessionStorage.setItem("dtc-authenticated", "true");
         onSuccess();
       } else {
         setError("Incorrect password. Please try again.");
