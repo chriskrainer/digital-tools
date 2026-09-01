@@ -42,7 +42,7 @@ The platform uses React 18, TypeScript, Vite, and Wouter for routing. UI is buil
 The backend is Node.js with Express.js (TypeScript), providing REST APIs for QR codes, QR scans, UTM campaigns, and UTM visits. Security is handled with Helmet middleware. Zod validates API payloads, `qrcode` and `canvas` generate QR images, and short-code redirects record retained-tool analytics.
 
 ### System Design Choices
-Data is stored in the remix's managed Replit PostgreSQL database and managed with Drizzle ORM. The active schema contains QR codes, QR scans, UTM campaigns, and UTM visits. When `DTC_ACCESS_PASSWORD` is configured, server-signed HTTP-only sessions protect all QR and UTM management APIs while public redirect routes remain accessible.
+Data is stored in the remix's managed Replit PostgreSQL database and managed with Drizzle ORM. The active schema contains QR codes, QR scans, UTM campaigns, UTM visits, and hashed login-attempt throttling records. When `DTC_ACCESS_PASSWORD` is configured, server-signed HTTP-only sessions protect all QR and UTM management APIs while public redirect routes remain accessible. Failed login attempts are durably limited across deployment instances.
 
 ## External Dependencies
 

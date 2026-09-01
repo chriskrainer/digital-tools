@@ -77,7 +77,13 @@ export function PasswordScreen({ onSuccess }: PasswordScreenProps) {
       if (data.success) {
         onSuccess();
       } else {
-        setError("Incorrect password. Please try again.");
+        setError(
+          response.status === 429
+            ? "Too many attempts. Please wait before trying again."
+            : response.status === 503
+              ? "Authentication is temporarily unavailable. Please try again."
+              : "Incorrect password. Please try again.",
+        );
         setPassword("");
       }
     } catch (err) {

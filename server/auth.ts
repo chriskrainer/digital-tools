@@ -1,5 +1,10 @@
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import type { NextFunction, Request, Response } from "express";
+import {
+  clearLoginFailures,
+  getLoginBlock,
+  recordLoginFailure,
+} from "./repositories/authRateLimitRepository";
 
 const AUTH_COOKIE = "digital-tools-session";
 const SESSION_DURATION_SECONDS = 8 * 60 * 60;
@@ -38,6 +43,16 @@ function createSessionToken(): string {
   return `${expiresAt}.${signExpiration(expiresAt)}`;
 }
 
+function getRateLimitKey(req: Request): string {
+  return createHmac("sha256", getSessionSecret())
+    .update(req.ip || req.socket.remoteAddress || "unknown")
+    .digest("hex");
+}
+
+function secondsUntil(date: Date): number {
+  return Math.max(1, Math.ceil((date.getTime() - Date.now()) / 1000));
+}
+
 function hasValidSession(req: Request): boolean {
   if (!process.env.DTC_ACCESS_PASSWORD) {
     return true;
@@ -64,12 +79,34 @@ export function registerAuthRoutes(app: import("express").Express): void {
     });
   });
 
-  app.post("/api/auth/verify-password", (req, res) => {
+  app.post("/api/auth/verify-password", async (req, res) => {
     const correctPassword = process.env.DTC_ACCESS_PASSWORD;
     const suppliedPassword = typeof req.body?.password === "string" ? req.body.password : "";
 
-    if (correctPassword && !safeEqual(suppliedPassword, correctPassword)) {
-      return res.status(401).json({ success: false, error: "Invalid password" });
+    if (correctPassword) {
+      const rateLimitKey = getRateLimitKey(req);
+
+      try {
+        const existingBlock = await getLoginBlock(rateLimitKey);
+        if (existingBlock) {
+          res.setHeader("Retry-After", String(secondsUntil(existingBlock)));
+          return res.status(429).json({ success: false, error: "Too many attempts" });
+        }
+
+        if (!safeEqual(suppliedPassword, correctPassword)) {
+          const blockedUntil = await recordLoginFailure(rateLimitKey);
+          if (blockedUntil) {
+            res.setHeader("Retry-After", String(secondsUntil(blockedUntil)));
+            return res.status(429).json({ success: false, error: "Too many attempts" });
+          }
+          return res.status(401).json({ success: false, error: "Invalid password" });
+        }
+
+        await clearLoginFailures(rateLimitKey);
+      } catch (error) {
+        console.error("Authentication rate limiter failed:", error);
+        return res.status(503).json({ success: false, error: "Authentication unavailable" });
+      }
     }
 
     if (correctPassword) {

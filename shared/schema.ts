@@ -68,6 +68,14 @@ export const utmVisits = pgTable("utm_visits", {
   visitedAt: timestamp("visited_at").notNull().defaultNow(),
 });
 
+export const authLoginAttempts = pgTable("auth_login_attempts", {
+  key: varchar("key", { length: 64 }).primaryKey(),
+  failureCount: integer("failure_count").notNull().default(0),
+  windowStartedAt: timestamp("window_started_at").notNull().defaultNow(),
+  blockedUntil: timestamp("blocked_until"),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 export const insertUTMCampaignSchema = createInsertSchema(utmCampaigns)
   .omit({
     id: true,

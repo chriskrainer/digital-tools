@@ -13,6 +13,7 @@ import { registerRoutes } from "./digitalToolsRoutes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
+app.set("trust proxy", 1);
 
 // Security headers middleware
 const isDevelopment = app.get("env") === "development";
