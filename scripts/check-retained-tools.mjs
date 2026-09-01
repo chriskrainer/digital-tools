@@ -1,11 +1,18 @@
 import assert from "node:assert/strict";
 
 const baseUrl = process.env.RETAINED_CHECK_BASE_URL ?? "http://127.0.0.1:5000";
+let sessionCookie;
 
 async function request(path, options = {}) {
+  const headers = new Headers(options.headers);
+  if (sessionCookie) {
+    headers.set("Cookie", sessionCookie);
+  }
+
   const response = await fetch(`${baseUrl}${path}`, {
     redirect: "manual",
     ...options,
+    headers,
   });
 
   return response;
@@ -57,6 +64,26 @@ async function run() {
     "boolean",
     "/api/auth/check must return authenticated as a boolean",
   );
+
+  if (authBody.passwordRequired && !authBody.authenticated) {
+    const password = process.env.DTC_ACCESS_PASSWORD;
+    assert.ok(password, "DTC_ACCESS_PASSWORD is required to run retained checks");
+
+    const loginResponse = await request("/api/auth/verify-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password }),
+    });
+    assert.equal(loginResponse.status, 200, "Retained check authentication failed");
+
+    const setCookie = loginResponse.headers.get("set-cookie");
+    assert.ok(setCookie, "Authentication response must set a session cookie");
+    sessionCookie = setCookie.split(";")[0];
+
+    const authenticatedResponse = await expectStatus("/api/auth/check", 200);
+    const authenticatedBody = await authenticatedResponse.json();
+    assert.equal(authenticatedBody.authenticated, true, "Session cookie must authenticate");
+  }
 
   const qrCodes = await expectJsonArray("/api/qrcodes");
   if (qrCodes.length > 0) {

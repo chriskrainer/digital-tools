@@ -162,6 +162,7 @@ export function PasswordScreen({ onSuccess }: PasswordScreenProps) {
             <div className="space-y-2">
               <Input
                 type="password"
+                autoComplete="current-password"
                 placeholder="Enter password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

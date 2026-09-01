@@ -66,7 +66,7 @@ function AppContent() {
 }
 
 function AuthWrapper({ children }: { children: React.ReactNode }) {
-  const { data: authCheck, isLoading, refetch } = useQuery<{
+  const { data: authCheck, isLoading, isError, refetch } = useQuery<{
     passwordRequired: boolean;
     authenticated: boolean;
   }>({
@@ -77,6 +77,24 @@ function AuthWrapper({ children }: { children: React.ReactNode }) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (isError || !authCheck) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-6 text-center">
+        <p className="text-lg font-medium">Unable to verify access</p>
+        <p className="max-w-md text-sm text-muted-foreground">
+          Digital Tools could not confirm your session. Check your connection and try again.
+        </p>
+        <button
+          type="button"
+          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+          onClick={() => void refetch()}
+        >
+          Try again
+        </button>
       </div>
     );
   }
